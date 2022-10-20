@@ -1,0 +1,356 @@
+\documentclass{chezarticle}
+
+\title{CS170: Introduction to AI}
+\author{Nathan Romanelli}
+
+\begin{document}
+
+\section{What is AI}
+The ultimate goal of AI is to create an algorithm which can solve all problems (Artificial general intelligence). Since this isn't feasible, we instead aim to solve problems and their relevant sub-problems with specific algorithms. There's a direct trade-off from generality and problem solving ability. Training intuition is hard.
+\\
+If artificial intelligence is possible, super intelligence is also theoretically possible. Super intelligence is AGI which surpasses human intelligence by orders of magnitude. 
+
+\section{Searching}
+\subsection{Intro}
+Simple recursive searching can solve problems with high degrees of freedom; by exploring possible actions or different states of a system you can find an optimal path to a solution.
+\\
+Brute force search of a problem space isn't always feasible since with more degrees of freedom the speed of searching exponentially increases.
+\subsection{Problem Solving Using Search}
+To solve problems using search we need to choose a problem space were going to search and an algorithm to search the space. The two choices are entirely independent of each other. 
+\subsubsection{Problem Space}
+\begin{definition}
+A problem space consists of the representation of the state, the current state of the world (initial state), a description of the actions we can take to transform the state (operators), and a description of the desired state (implicit or explicit). A solution consists of a path from the world state to the goal state. If the path doesn't matter the problem is a constraint satisfaction problem.
+\end{definition}
+An excess of operators, or a lack of them, can both be detrimental since an operator might be essential to a solution or useless for one, expanding our space without necessity. \\
+An implicit goal state can have multiple forms that satisfy some parameters, or it can have an explicit form.
+\subsubsection{Cost of operators}
+For some problems, not all operators will have the same cost. If operations are weighted, more operators might lead to a optimal solution. We can choose what parameter to optimize (Sum of cost of operations, number of operations, etc). There my be many options to optimize based on the attributes of the space.
+\subsubsection{Algorithm}
+Preforming a random or brute force search of a large problem space isn't feasible; the time to do so increases exponentially with the dimensions of the space. Instead, we choose a systematic search method. 
+\begin{definition}
+The branching factor of a problem determines how fast the problem space grows as the number of dimensions $n$ grows. A small branching factor means with $n$ levels of a tree there will be less nodes than a large branching factor.
+\end{definition}
+\begin{definition}
+The diameter of a problem is the depth of the longest solution, or the worst case. It is also referred to as God's number. God's number is the intersection of the upper and lower bound of diameters. 
+\end{definition}
+The worst case can be described as the hardest problem presentable (or the state furthest from the solution by some distance metric) if there is a unique solution or if all solutions are equally far from the initial state.
+\\
+Creating a lower bound is easy, since you can just choose an arbitrarily low number (or the shortest distance metric even if its not possible) but proving increasing lower bounds and decreasing lower bounds until the two converge is extremely difficult. 
+\begin{definition}
+An algorithm is complete if it can find a solution, given one exists, in finite time. Optimality of an algorithm guarantees it will find the best solution to a problem if there's multiple solutions. Time complexity of an algorithm defines how long it takes to find a solution. Space complexity is the memory required by an algorithm while searching for a solution.
+\end{definition}
+As it turns out, memory often becomes a greater constraint than time with searching algorithms. 
+\subsection{Generic Search Algorithm}
+\begin{algorithm}
+\textbf{function} general-search(problem,QUEUEING FUNCTION)\\
+nodes = MAKE-QUEUE(MAKE-NODE(problem,INITIAL-STATE))\\
+\textbf{loop do}\\
+\textbf{if} EMPTY(nodes) \textbf{then return} "failure"\\
+node = REMOVE-FRONT(nodes)\\
+\textbf{if} problem.GOAL-TEST(node.STATE) succeeds \textbf{then return} node\\
+nodes = queueing-function(NODES,expand(NODE,PROBLEM,operators))\\
+\textbf{end}
+\end{algorithm}
+
+\subsubsection{Breadth First Search}
+\begin{algorithm}
+Intuitively, BFS expands all nodes at depth $i$ before expanding nodes at depth $i+1$. BFS is complete, and optimal, with a time complexity of $O(b^d)$ and a space complexity of $O(b^d)$.
+\end{algorithm}
+Every node in the fringe is kept in the queue, which is poor for space complexity. On a problem with a high branching factor the queue can get too long to handle. 
+\subsubsection{Uniform Cost Search}
+\begin{algorithm}
+The algorithm expands the cheapest node where the cost is the path cost $G(n)$. It is complete, optimal, with a time 
+\end{algorithm}
+\subsubsection{Depth First Search}
+\begin{algorithm}
+Expand node at the deepest level. It is not complete, not optimal, runs in $O(b^m)$ with space $O(bm)$ where $m$ is the maximum depth. DFS without checking for repeated states will run forever. If we check for repeated states, we may have to expand the full size of the problem space. 
+\end{algorithm}
+DFS does well with space complexity, but can not find feasible all solutions.\\
+Occasionally, we know the full depth of the tree, and using this we can define a new search method.
+\subsubsection{Depth Limited Search}
+\begin{algorithm}
+Expand node at the deepest level up to depth $L$. It is complete if the goal state lies above $L$, but its not optimal. It runs in $O(b^l)$ in space $O(bl)$.
+\end{algorithm}
+\subsubsection{Iterative Deepening Search}
+We don't always know the depth, so we can create a clever intuition. DLS is not optimal, so we need a new method. We can then preform an iterative DLS, increasing $L$ with each iteration. This method has the optimally and completeness of BFS with the low space complexity of DFS. This combines the best features of DFS and BFS. 
+\begin{algorithm}
+Preform a DLS with iteratively increasing $L$. 
+\end{algorithm}
+At the current deepest $L$ the previous layers are constant time relative to $L$. This changes based on the branching factor, but trying to memoize these previous levels makes space complexity poor, defeating the purpose of DLS. 
+\subsubsection{Bi-directional search}
+\begin{algorithm}
+Start searching fomrm both the intial state and the goal state, meeting in the middle. This method is complete, optimal, and runs in $O(b^{\frac{d}{2}})$ in $O(b^{\frac{d}{2}})$ space.
+\end{algorithm}
+A difficulty of this algorithm is knowing when the two searches have actually met. This can be done by keeping track of where the searches are in the space, but this very quickly consumes memory. Its possible to do this with hashing.
+\subsection{Hardness of your search}
+The time and space complexity depend on the branching factor and the depth, so knowing this lets us figure out how hard the problem is. Getting the worst or average case branching factor is not usually hard, whereas knowing the depth can be very difficult. We can also bound the depth using upper and lower bounds.
+\\
+Solutions always lie between 0 and infinity. 
+\\subsection{Discrete or continuous problems}
+Problems can be defined using discrete or continuous methods- sometimes it can be impossible to define operators discretely such as when driving with no marked intersections. To handle this, we must project a discrete map onto the real valued world. Without this kind of mapping problems can be unsolvable since most algorithms today are discrete.\\
+Since solutions can be implicit or explicit, many times we don't know what a solution would look like (Such as with 8 queens) so we must define the solution implicitly.
+\\
+\\
+(ORganize the stuff above idk wtf is goin on)
+\\
+\\
+\
+\subsection{Heuristic Search}
+\begin{algorithm}
+Moth Algorithm\\
+The moth flies in a straight line and has a midpoint between his starting and end point; he then flies in a orthogonal line that brings him closer to the female moth. He repeats until he arrives at the female moth. 
+\end{algorithm}
+This is only possible because the moth has access to information (Smell), if you take it away them moth preforms a uniform grid search. The form of searching where the moth has access to information as it searches is heuristic search.
+\begin{definition}
+Heuristic Search is a form of informed search, as opposed to a uniform uninformed search covered above.
+\end{definition}
+A form of information we can use for heuristic searching is finding distance to the goal state- this allows us to discount moves which bring us further from the goal state instead of exploring them as options equally valuable as random states.
+\begin{definition}
+A heuristic is a function that, when applied to a state, returns a number that is an estimate of the merit of the state, with respect to the goal. We write a heuristic as $h(n)$. 
+\end{definition}
+A heuristic tells us approximately how far the sate is from the goal state. Heuristics might underestimate or overs estimate the merit of a state. Heuristics that only underestimate are undesirable and are called admissible. The Manhattan distance is a form of heuristic.
+\begin{example}
+We can use a heuristic with our general search algorithm; for queueing, we simply sort by cheapest $h(n)$. The algorithm is known as greedy search or hill climbing search or best first search. 
+\end{example}
+A problem with heuristic searching is local minimums; heuristic searches can be caught in local minimums and since every surrounding state has a worse score by some metric, it will be stuck. 
+\begin{claim}
+We have seen uniform cost which is optimal and complete, but slow. We also know hill climbing is neither optimal not complete, but very fast. We can potentially combine the two algorithms to create a new algorithm which is fast, optimal, and complete.
+\end{claim}
+\begin{algorithm}
+The A* Algorithm uses $g(n)$ to get the cost to get to the node, $h(n)$ which is the distance of the node to the goal state, and minimizes $f(n) = g(n) + h(n)$
+\end{algorithm}
+If a heuristic is admissible, then A* is optimal and complete.
+\begin{note}
+The $h(n)$ of the goal state must be zero\\
+$h(n) = 0 $ doesn't imply we have arrived at the goal state\\
+If we hardcode a heuristic to always return zero, A* simply becomes uniform cost search.\\
+In general, we want a heuristic to be "tight." This means we want it to be as close to the true distance as possible without going over.\\
+\end{note}
+A* has the worst case $O(b^d)$ space complexity, but an iterative deepening version is possible. IDA* has $O(bd)$ space complexity.
+\\
+\begin{note}
+There is no way to beat A*, only a way to come up with better heuristics.
+\end{note}
+While greedy may sometimes produce optimal results comparable to A*, it will not always produce the optimal solution since it is not complete.
+\\
+\subsubsection{Island Driven Search}
+\begin{definition}
+Island driven search lets you break the larger problem into smaller sub-problems which can be solved individually. This lets you reduce the space of a problem space when theres no feasible heuristics to drive A*.
+\end{definition}
+An example of Island driven search is solving rubik's cubes- you can solve one side at a time and join your solutions to ultimately solve the cube and drastically reduce the problem space size. Generally, exploring an island will lead to an optimal solution if and only if that island is part of the optimal solution. 
+\subsubsection{Search to failure}
+A solution to a certain problem doesn't always exist; solutions across parities of problems is impossible. For example, different parities of Rubik's cubes can never have identical states. In principle, we would exhaust our search and explore every nodes in a tree before deciding no solution exists, but this would take longer than the universe has existed. To make an unsolvable problem solvable, you can add 'bridges' between parities, such as switching cubes on a rubik's cube. 
+\begin{note}
+Failure in search could be useful; suppose we prove something is true for $n$ by searching a space until we find a solution, and we preform the same search for $n+1$ until the search fails. This has proven something is only true for $n$. 
+\end{note}
+Not knowing all operators can mean not finding a potential solution, or leading to failure.
+\begin{definition}
+Pre-computing a tree could mean instead of computing the entire tree we could preform a query in constant time using hashing. 
+\end{definition}
+Pre-computation is useful if some sections of a tree are being computed many times.
+\subsection{Adversarial Search}
+There's games along two dimensions; Deterministic or Stochastic, and Perfect Information or Imperfect information. Deterministic means no amount of probability is involed, whereas in Stochastic there is an element of luck. In perfect information games we know all information at all times, whereas in imperfect information games some information is hidden. Games can be one player or two player, and can be cooperative or competitive. A game has a form of intelligence, often adversarial, whereas a puzzle simply has a starting and goal state (Like a Rubik's cube).
+\begin{definition}
+In two player games we have an initial state, a set of operators, a terminal test (to tell when the game is over), and a utility function (evaluation function) to determine who is winning.
+\end{definition}
+The utility function is like a heuristic function and can be used in searches.
+\begin{lemma}
+We make a fundamental assumption that both players are rational and always make the optimal decision, given any information available. Because of this assumption, the payoff results are a lower bound since one player may play sub-optimally.
+\end{lemma}
+\begin{algorithm}
+Minmax algorithm is optimal, but has a time complexity of $O(b^m)$ where $b4$ is he effective branching factor and $m$ is the depth of the terminal states. The space complexity is only liner in $b$ and $m$ since we can do DFS.
+\end{algorithm}
+A solution to this is depth-limited minmax search where we evaluate as deep as possible given some constraint, evaluate the fringe nodes using our utility function, upward propagate the values, and make our decision. 
+\begin{example}
+Consider a game of chess where max is "White". Assign values to each piece coresponding to the utility of the pieces. Let $w = $ sum of value of white pieces, and $b = $ sum of black pieces on the board. The evaluation function is $e(n) = \frac{w-b}{w+b}$. If this is positive, it means white has an advantage, and if its negative black has an advantage. 
+\end{example}
+This isn't a great heuristic, since it only accounts for material advantage and not position. A side could be one move from checkmate and have a poor utility score. 
+\begin{example}
+Let $X_i$ be the number of squares the $i$th piece attacks, $e(n) = $ piece$_1$value $ \cdot  X_1 + $ piece$_2$value $ \cdot X_2 + ...$
+\end{example}
+Modern evaluations are done using machine learning and old games to find winning positions. 
+\begin{fact}
+We can not beat Minmax for exact game playing. Instead, our time is better spent finding better utility functions (similar to A* and heuristics).
+\end{fact}
+While this is true, we can make Minmax more efficient using Alpha-Beta Pruning. Using depth as a limit to our search is an issue because of the "horizon effect" where we may be one move away from making a brilliant move. 
+\begin{proposition}
+What if we could prune branches from Minmax so that we don't explore blatantly bad moves to the same depth as moves which may be heuristically better.
+\end{proposition}
+We can do this by considering a "best so far" branch while exploring the minmax tree. Keeping this in memory, as soon as we encounter a branch which is less optimal than our "best so far" branch, we can prune that branch from the tree and save computational power and time by not exploring that branch. 
+\begin{algorithm}
+Alpha-Beta, which preforms Minmax with our pruning method, we are guaranteed to find the same value for the root node as Minmax. In the worst case we preform a minmax search in $O(b^d)$ time, where each node has $b$ children and $d-$ply search is used, but in the best case it takes $O(2\cdot b^{\frac{d}{2}})$ time. 
+\end{algorithm}
+This means using Alpha-Beta we can essentially search twice as deep as minmax given the same tree in the best case.
+\begin{note}
+In the chess program Deep Blue, the branching factor was reduced from about 35-40 to 6 using pruning.
+\end{note}
+Modern chess engines can be constarined by difficulty using the depth of the search; a beginner chess player can think about 3-4 moves ahead, versus a grandmaster can think about 9 moves ahead. Similarly, we can constrain the difficulty of the algorithms by limiting the depth of our search. Theoretically, if the tree could be completely searched the algorithm could solve the game.
+
+\subsection{Stochastic Games}
+To account for games where probability is a factor, we can include chance nodes in our tree. The operators must include the cross product of every outcome of chance and everything a human can do.
+\begin{definition}
+The expected value of minimax can be written as
+\begin{align*}
+    \sum_{s \in \text{Successors}(n)} P(s) \cdot \text{Expectminimax}(s)
+\end{align*}
+Where $P(s)$ is the probability of a random event occurring
+\end{definition}
+This makes the time complexity of minimax $O(b^m n^m)$ where $n$ is the number of distinct events. $\alpha - \beta$ pruning can be extended, but the time complexity is still enormous. However, humans are terrible at probability, so algorithms can still beat humans at even shallow searches.
+
+\subsection{Monte Carlo Tree Search}
+The search space of Go is massively larger than the space for chess. The game-tree complexity of go is about $2^787$. Chess, also, has a higher variance in the space; nodes in the same level will have very different values of evaluation, whereas in Go the nodes in a level will have very little variance. Chess is a subtractive game, meaning we start with all the pieces and remove them, whereas Go is an additive game, which contributes to its massive branching factor. All the utility functions we have for Go tend to only be useful deeper in the tree. Because of this, by the time the evaluation algorithms become useful in Go, the human is already in a winning position. 
+\begin{proposition}
+Monte Carlo tree search is an algorithm for stochastic games/systems; its not exact like minimax or alpha beta, but its extremely fast and can approximate solutions.
+\end{proposition}
+If we consider evaluation functions the average of many terminal tests, Monte Carlo only needs to evaluate individual terminal tests. By randomly sampling the distribution, we can approximate the evaluation of a node without explicitly evaluating every outcome. 
+\begin{algorithm}
+Until we run out of time, Monte Carlo tree search will repeat the following process:\\
+1) Expand the current node\\
+2) Play $n$ random games from each leaf\\
+3) Pass the statistics of each game up the tree\\
+4) Expand the most promising node
+\end{algorithm}
+\begin{fact}
+Matrix multiplication was an untouched problem for about 50 years until the team behind alphago created alphatensor. The idea was to make a game out of matrix multiplication and create an algorithm which could find an efficient algorithm to find solutions.
+\end{fact}
+\subsection{Solved Games}
+\begin{definition}
+A solved game is one in which you can predict the outcome from any position given rational play.
+\end{definition}
+The most obvious way to solve a game is to run minmax until the tree is completely explored. This is easy to do for a game like tic-tac-toe, which is a solved game. For games with larger problem spaces, solving becomes extremely difficult or impossible.
+\begin{fact}
+For some games, you can prove that one player will always win given optimal play.
+\end{fact}
+I can't play the L game cause I only take dubs :pensive:\\
+While chess hasn't' been solved, the end games have, up to 7 or fewer pieces remaining. 
+\subsection{Review}
+\subsubsection{Adversarial Search}
+1) Minimax is the optimal algorithm\\
+2) We can almost never use minimax
+3) finish
+
+\subsection{Optimizing Search}
+Optimizing search is different from path search; the search is used for problems where exhaustive and heuristic search are NP hard. The path is not important, so we don't need a tree and the constraint is CPU time more than memory. Every state in this search is a "solution," but we want a globally, or at least locally, optimal solution. The search spaces are continuous in this search, and the task is usually to minimze or maximize a function.\\
+\begin{example}
+A salesman spends his time visiting $n$ cities. In one tour he visits each city just once, and finishes up where he started. In what order should he visit them to minimize the distance traveled? There are $(n -1)!/2$ possible tours.
+\end{example}
+To preform a optimization search we need states. Assume we can represent a state, quickly evaluate the quality of a state, define operators to change from one state to another. Operators must be expressive; they should allow us to reach any part of the search space. 
+\begin{proposition}
+Lets consider two algorithms; Hill climbing search (Fast but not optimal) and Random search (optimal, but extremely slow). If we could combine the best aspects of these algorithms, we could get a best of both worlds algorithm like A*.
+\end{proposition}
+Random search is theoretically optimal, since it would explore every point in a problem space, but it could take practically endless time to exhaust a sufficiently large search space. Hill climbing search is extremely fast, but it doesn't find every optimum or a global optimum every time. By combining the two, we can preform hill climbing searches on random points. Preforming a random hill climbing search is extremely cheap, so we can preform enough that our probability of not finding the global optimum falls below a threshold were satisfied with. Step size is also an issue; if we pick a small step size finding an optimum can take far too long, and if we pick a large one we might bounce ourselves out of a local optimum. 
+\begin{algorithm}
+Simulated-Annealing is the combination of hill climbing and random search. The algorithm's sub searches are greedy and extremely fast, and repeated until we find a solution were satisfied with. Both algorithms are a special case of a probabilistic operator choice. Let $x \in [0,1]$ where $x$ is chosen randomly. If $x > t,$ choose best operator, else   chose a random operator. If $t=0$, this is pure greedy search. If $t = 1$, it is pure random search. If we set $t \in (0,1)$, it is partly random and partly greedy. $t$ stands for temperature.
+\end{algorithm}
+The idea is we start with a high value of $t$, then slowly lower the temperature to zero. In other words, we start by searching randomly and slowly make it greedy. When the algorithm is "young" it searches very randomly, and as it "matures" it begins to become more conservative and moves in the direction of improvement. 
+\subsection{Genetic Algorithms}
+Three conditions are necessary for natural selection:
+\begin{enumerate}
+    \item Variation- some of the members of the same species differ
+    \item Heritability- Some variability is inherited
+    \item Finite Resources- not every individual will live to reproduce
+\end{enumerate}
+Given the above conditions the idea of natural selection is this:
+\begin{definition}
+Some of the characteristics that are variable will be advantageous to survival. Thus, the individuals with the desirable traits are more likely to reproduce and have offspring with similar traits, therefore species evolve over time.
+\end{definition}
+The idea above powers our genetic algorithm.
+\begin{algorithm}
+\begin{enumerate}
+    \item Initialize a population of $n$ states
+    \item \textbf{While} time allows
+    \item Measure the quality of the sates using some fitness function
+    \item "Kill off" some of the states (typically the worst)
+    \item Allow the surviving states to reproduce (sexually, asexually, else)
+    \item \textbf{End While}
+    \item Report the best state as the answer
+\end{enumerate}
+\end{algorithm}
+We need to figure out how to represent states and evaluate them. Most commonly we can represent states as trees. The fitness function is fairly trivial; usually we can use a distance metric or heuristic we are trying to optimize. 
+\begin{proposition}
+Sex between genetic algorithms can be useful for escaping local optima; it allows us to make jumps across large spaces to other optima.
+\end{proposition}
+The idea that we keep the "best" set of individuals is flawed, since this essentially turns our search into a greedy search! We are homogenizing our pool of genes which means we will be stuck in a local optima. To solve this, we can instead keep some "unfit" genes in the hope they may lead us out of local optima. 
+\begin{note}
+Some discussion regarding genetic algorithm
+\begin{enumerate}
+    \item  Genetic algorithms require many parameters (population size, fraction of population generated by crossover, mutation rate, number of sexes, etc...) and with each parameter the possible permutations of our algorithms increases exponentially. This means its very difficult to tune all these parameters and ensure our algorithms functions how we want.
+    \item Because we are keeping some "bad" algorithms, instead of a greedy search we are basically preforming a hill climbing search with some "Randomness" which lets us escape local optima.
+    \item Genetic algorithms are very easily parralellized
+\end{enumerate}
+\end{note}
+\subsection{Why are human's so smart?}
+There is really no answer to this question, but the most popular theory is runaway evolution. 
+\begin{proposition}
+Consider sexual selection in nature; In a scenario where there is a constant preference in sexual selectors, the distribution  in a sufficiently large population converges at that preference since any deviation is not selected. In contrast, if there is a preference for a trend, such as "I like mates with longer tails," then the distribution endlessly skews towards the preference. 
+\end{proposition}
+The above scenario is an example of runaway evolution.
+\begin{definition}
+In runaway evolution, a competition within a species for sexual selection or survival is caught in a sort of feedback loop, resulting in extreme features in animals who win these competitions. Peacocks are an example of this, as their features they use for sexual competition are extremely exaggerated.
+\end{definition}
+We theorize this applies to humans as well; humans prefer other humans who are smart, emotionally, socially, logically, or otherwise.
+
+\section{Machine Learning}
+\subsection{Introduction}
+Supervised classification allows algorithms to learn how to classify data points based on features and previous examples of classifications (The reinforcement).
+\subsection{Classification}
+\subsubsection{Linear Classifier}
+\textbf{Missing notes}\\
+For many real problems there is no fixed data; instead we have a stream of data. If we use sum of squares for linear classification, instead of calculating a new classifier all over again for new data, instead we can try to adjust the classifier in constant time on only the new data point(s). 
+\begin{note}
+A benefit of linear classification is interpretability; being able to interpret the results of our classifications means we can gain insight into the problem.
+\end{note}
+
+\subsubsection{Non Linear Classifiers}
+Decision boundaries used to classify do not need to be linear; they can have more degrees of freedom which allows us to better fit data. Allowing classifiers to better fit the data makes it sensitive to outliers; a linear classifier is the least sensitive to outliers, so similarly one which has arbitrarily high degrees of freedom will be the most sensitive to outliers. 
+\subsubsection{Nearest Neighbor Classification}
+Nearest neighbor classification classifies new data points using the nearest data point. This can be extended to $k$ nearest neighbor classification for odd $k \geq 0$. This lets us deal with outlier sensitivity, since we will ignore single points which may disrupt our algorithm.
+\subsubsection{Picking Hyper-parameters}
+How do we know what value of $k$ to pick? The best solution is $k$-fold cross validation for varying values of $k$ until we find one which minimizes loss. 
+\subsection{Supervised Learning}
+\begin{definition}
+Training algorithms using data with examples and their correct classification is called supervised learning.
+\end{definition}
+In supervised learning we process data points use the correct classification to adjust our algorithm until we minimize loss on the training data. 
+\subsubsection{Irrelevant Features}
+Unfortunately, $k$-nearest neighbors is very sensitive to irrelevant features. The more features we include, the higher the dimensionality of our space, which makes nearest neighbor classification very different in different spaces. If we introduce a new dimension, we could completely change the $k$ nearest neighbors of any given point, meaning that feature could ruin our classification.
+\begin{proposition}
+To deal with $k$-nearest neighbor's sensitivity to irrelevant features, we can use search subsets of features to find which set minimizes loss.
+\end{proposition}
+The problem with searching is the exponential time complexity; for $n$ features there are $2^n - 2$ subsets of features excluding the empty set and the entire set. Some features are only useful together; for example, weight and height for determining health. Separating them may make them individually useless which makes searching much harder. 
+\\
+\\
+Another issue with $k$-nearest neighbor is the sensitivity to measurements or units. There isn't really a way to know how to scale height in meters and weight in kilograms so that they have the same impact on classification. 200 kilograms and 200 meters mean very different things.
+\begin{definition}
+$\mathrm{Z}-$ Normalization where
+\begin{align*}
+    X := \frac{X - \mu}{\sigma}
+\end{align*}
+
+\end{definition}$\mathrm{Z}-$normalize the data which removes this scaling issue.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Knowledge Representation}
+Knowledge representation is taking existing knowledge and generating new knowledge/facts. This is something physicists and mathematicians do all the time.
+
+
+\end{document}
